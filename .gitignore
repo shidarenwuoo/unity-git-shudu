@@ -70,3 +70,10 @@ crashlytics-build.properties
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
+/ShidarenwuooSusoku/UserSettings
+/ShidarenwuooSusoku/.vsconfig
+/ShidarenwuooSusoku/Assembly-CSharp.csproj
+/ShidarenwuooSusoku/ShidarenwuooSusoku.sln
+/ShidarenwuooSusoku/Library
+/ShidarenwuooSusoku/Logs
+/ShidarenwuooSusoku/Temp

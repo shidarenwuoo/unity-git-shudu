@@ -13,6 +13,10 @@ public class UIMain : UIBehaviour
     [Range(2, 4)]
     private int level;
 
+    [SerializeField]
+    [Range(0, 1)]
+    private float difficult;
+
     [SerializeField] 
     private Button button;
 
@@ -23,6 +27,6 @@ public class UIMain : UIBehaviour
 
     public void CreateSudoku()
     {
-        board.CreateSudoku(level);
+        board.CreateSudoku(level, difficult);
     }
 }

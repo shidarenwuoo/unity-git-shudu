@@ -8,9 +8,11 @@ namespace Sudoku
     {
         private int _level;
         private int _length;
+        private float _difficulty;
 
         public int Level => _level;
         public int Length => _length;
+        public float difficulty => _difficulty;
         
         /// <summary>
         /// 生成的数独最终解(不确保唯一性),可作为参考答案
@@ -45,7 +47,7 @@ namespace Sudoku
             return gridNumber[row, column];
         }
         
-        public void CreateNewPuzzle(int level)
+        public void CreateNewPuzzle(int level, float hard)
         {
             if (level < 2)
             {
@@ -55,6 +57,7 @@ namespace Sudoku
 
             _level = level;
             _length = level * level;
+            _difficulty = Mathf.Clamp01(hard);
             CreatePuzzleInternal();
         }
 
@@ -70,10 +73,7 @@ namespace Sudoku
             puzzleAnswer = new int[_length, _length];
             puzzleNumber = new int[_length, _length];
             CreatePuzzleAnswer();
-
-            // 暂时以现在的值作为谜题输出，测试算法
-            CopyArray(puzzleAnswer, puzzleNumber);
-            CopyArray(puzzleAnswer, gridNumber);
+            CreatePuzzleFromAnswer();
         }
 
         /// <summary>
@@ -168,7 +168,40 @@ namespace Sudoku
             if (!SolveSudoku(puzzleAnswer, 0))
             {
                 Debug.LogError("随机出来的数独无解！！！");
+                ClearPuzzle(puzzleAnswer, Length);
+                // 重新随机新的谜题
+                CreatePuzzleAnswer();
             }
+        }
+
+        private void CreatePuzzleFromAnswer()
+        {
+            System.Array.Copy(puzzleAnswer, puzzleNumber, puzzleAnswer.Length);
+
+            int minEmptyNum = Level * Level;
+            int maxEmptyNum = (Length - 1) * (Length - 1);
+            int emptyNum = (int)(minEmptyNum * (1 - difficulty) + maxEmptyNum * difficulty);
+            int totalNum = Length * Length;
+            for (int i = 0; i < Length && emptyNum > 0; ++i)
+            {
+                for (int j = 0; j < Length && emptyNum > 0; ++j)
+                {
+                    int randomValue = Random.Range(0, totalNum);
+                    if (randomValue < emptyNum)
+                    {
+                        puzzleNumber[i, j] = 0;
+                        --emptyNum;
+                    }
+                    --totalNum;
+                }
+            }
+
+            // 检查并确保所有不同的数字都出现过
+            
+              
+
+            // 将谜题备份用于重开本局游戏
+            System.Array.Copy(puzzleNumber, gridNumber, gridNumber.Length);
         }
 
         private bool SolveSudoku(int[,] puzzle, int startIndex)
@@ -280,14 +313,14 @@ namespace Sudoku
 
             return false;
         }
-        
-        private void CopyArray(int[,] from, int[,] to)
+
+        private void ClearPuzzle(int[,] array, int length)
         {
-            for (int i = 0; i < from.GetLength(0); ++i)
+            for(int i = 0; i < length; ++i)
             {
-                for (int j = 0; j < from.GetLength(1); ++j)
+                for(int j = 0; j < length; ++j)
                 {
-                    to[i, j] = from[i, j];
+                    array[i, j] = 0;
                 }
             }
         }

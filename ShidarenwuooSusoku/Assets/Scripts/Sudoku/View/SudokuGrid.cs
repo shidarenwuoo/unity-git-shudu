@@ -17,9 +17,9 @@ namespace Sudoku
         private List<SudokuCell> cells = new List<SudokuCell>();
         private List<SudokuSubGrid> subGrids = new List<SudokuSubGrid>();
 
-        public void CreateSudoku(int level)
+        public void CreateSudoku(int level, float difficult)
         {
-            logic.CreateNewPuzzle(level);
+            logic.CreateNewPuzzle(level, difficult);
             CreateGrid();
         }
 

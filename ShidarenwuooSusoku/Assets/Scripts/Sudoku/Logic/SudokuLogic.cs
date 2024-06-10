@@ -4,6 +4,9 @@ using UnityEngine;
 
 namespace Sudoku
 {
+    /// <summary>
+    /// 用于执行数独逻辑，独立于表现层
+    /// </summary>
     public class SudokuLogic
     {
         private int _level;

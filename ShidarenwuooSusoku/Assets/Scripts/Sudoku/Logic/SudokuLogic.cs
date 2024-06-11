@@ -45,9 +45,26 @@ namespace Sudoku
         /// </summary>
         public bool Finished => _created && _finished;
 
+        /// <summary>
+        /// 获取答题过程中的数值
+        /// </summary>
+        /// <param name="row"></param>
+        /// <param name="column"></param>
+        /// <returns></returns>
         public int GetCellValue(int row, int column)
         {
             return gridNumber[row, column];
+        }
+
+        /// <summary>
+        /// 获取参考答案
+        /// </summary>
+        /// <param name="row"></param>
+        /// <param name="column"></param>
+        /// <returns></returns>
+        public int GetReferenceAnswer(int row, int column)
+        {
+            return puzzleAnswer[row, column];
         }
         
         public void CreateNewPuzzle(int level, float hard)

@@ -12,4 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ea4e1143f3cfea4f90761f64480080f, type: 3}
   m_Name: SudokuConfig
   m_EditorClassIdentifier: 
-  sudokuLevels: []
+  sudokuLevels:
+  - level: 2
+    difficult: 0
+  - level: 0
+    difficult: 0.244
+  - level: 0
+    difficult: 0.841
+  - level: 3
+    difficult: 0.296
+  - level: 3
+    difficult: 0.681

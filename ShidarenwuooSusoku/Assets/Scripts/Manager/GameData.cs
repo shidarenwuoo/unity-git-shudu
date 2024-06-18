@@ -8,6 +8,12 @@ public static class GameData
 
     public static void SaveLevel(int level)
     {
+        int current = GetUnlockLevel();
+        if (current >= level)
+        {
+            return;
+        }
+        
         PlayerPrefs.SetInt(UnlockLevelKey, level);
         
         PlayerPrefs.Save();

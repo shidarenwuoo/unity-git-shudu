@@ -15,6 +15,6 @@ public static class GameData
 
     public static int GetUnlockLevel()
     {
-        return PlayerPrefs.GetInt(UnlockLevelKey, 1);
+        return PlayerPrefs.GetInt(UnlockLevelKey, 0);
     }
 }

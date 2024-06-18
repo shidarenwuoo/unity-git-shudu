@@ -14,10 +14,30 @@ namespace Sudoku
         [SerializeField] 
         private Button button;
 
+        [SerializeField]
+        private Color validColor;
+        [SerializeField]
+        private Color invalidColor;
+        
+        private Color disputableColor;
+        
+        private int index;
+        
+        public event Action<int> OnClickCell;
 
+        public void SetIndex(int index)
+        {
+            this.index = index;
+        }
+        
         public void SetNumber(int value)
         {
-            numberText.text = value.ToString();
+            numberText.text = value == 0 ? "" : value.ToString();
+        }
+
+        public void SetState(bool valid)
+        {
+            numberText.color = valid ? validColor : invalidColor;
         }
 
         public void Clear()
@@ -28,7 +48,7 @@ namespace Sudoku
         /// <summary>
         /// 设置为可编辑状态，作为需要填写的位置
         /// </summary>
-        public void EnableEditor()
+        public void EnableEdite()
         {
             button.enabled = true;
         }
@@ -36,20 +56,26 @@ namespace Sudoku
         /// <summary>
         /// 设置为不可编辑状态，作为初始值时使用
         /// </summary>
-        public void DisableEditor()
+        public void DisableEdite()
         {
             button.enabled = false;
+            numberText.color = disputableColor;
         }
 
-
+        public bool CanEdite()
+        {
+            return button.enabled;
+        }
+        
         private void Awake()
         {
             button.onClick.AddListener(OnClickButton);
+            disputableColor = numberText.color;
         }
 
         private void OnClickButton()
         {
-            
+            OnClickCell?.Invoke(index);
         }
     }
 }

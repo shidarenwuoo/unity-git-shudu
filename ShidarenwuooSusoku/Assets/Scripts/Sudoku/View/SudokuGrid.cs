@@ -12,18 +12,47 @@ namespace Sudoku
         [SerializeField]  
         private SudokuSubGrid subGridPrefab;
 
-        private SudokuLogic logic = new SudokuLogic();
-
         private List<SudokuCell> cells = new List<SudokuCell>();
         private List<SudokuSubGrid> subGrids = new List<SudokuSubGrid>();
 
-        public void CreateSudoku(int level, float difficult)
+        private SudokuLogic logic;
+        
+        public event Action<int> OnClickCell;
+        
+        public void CreateSudoku(SudokuLogic logicInstance)
         {
-            logic.CreateNewPuzzle(level, difficult);
+            this.logic = logicInstance;
             CreateGrid();
+            
+            // 根据当前Grid的大小进行缩放
+            float length = subGrids[0].rectTransform.rect.size.x * logic.Level;
+            float scale = rectTransform.rect.size.x / length;
+            rectTransform.localScale = new Vector3(scale, scale, 1);
         }
 
-        public void CreateGrid()
+        public void ChangeCellValue(int index, int value)
+        {
+            if (index < 0 || index >= cells.Count)
+            {
+                return;
+            }
+            
+            var cell = cells[index];
+            if (!cell.CanEdite())
+            {
+                return;
+            }
+            
+            cell.SetNumber(value);
+            // 判断是否有重复项
+            logic.AnswerPuzzle(index, value);
+            
+            // 刷新Cell状态
+            RefreshCellState();
+        }
+        
+        
+        private void CreateGrid()
         {
             int gridCount = logic.Level * logic.Level;
             // 根据level创建子网格
@@ -59,6 +88,7 @@ namespace Sudoku
                 {
                     cell = GameObject.Instantiate(cellPrefab, this.rectTransform);
                     cells.Add(cell);
+                    cell.OnClickCell += index => OnClickCell?.Invoke(index);
                 }
                 
                 // 做初始化
@@ -67,15 +97,16 @@ namespace Sudoku
                 int column = i % logic.Length;
                 cell.name = $"Cell{row}{column}";
                 int value = logic.GetCellValue(row, column);
+                cell.SetIndex(i);
                 if (value > 0)
                 {
                     cell.SetNumber(value);
-                    cell.DisableEditor();
+                    cell.DisableEdite();
                 }
                 else
                 {
                     cell.Clear();
-                    cell.EnableEditor();
+                    cell.EnableEdite();
                 }
 
                 int gridIndex = row / logic.Level * logic.Level + column / logic.Level;
@@ -94,7 +125,18 @@ namespace Sudoku
             }
         }
 
-
+        private void RefreshCellState()
+        {
+            for (int i = 0; i < cells.Count; ++i)
+            {
+                var cell = cells[i];
+                if (cell.CanEdite())
+                {
+                    cell.SetState(!logic.IsConflictAt(i));
+                }
+            }
+        }
+        
         private void Awake()
         {
             cellPrefab.gameObject.SetActive(false);

@@ -15,9 +15,9 @@ MonoBehaviour:
   sudokuLevels:
   - level: 2
     difficult: 0
-  - level: 0
+  - level: 2
     difficult: 0.244
-  - level: 0
+  - level: 2
     difficult: 0.841
   - level: 3
     difficult: 0.296

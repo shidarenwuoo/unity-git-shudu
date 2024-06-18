@@ -32,18 +32,19 @@ namespace Sudoku
         /// </summary>
         private int[,] gridNumber;
 
-        private bool _created;
-        private bool _finished;
-
         /// <summary>
-        /// 是否已经创建好可用的数独谜题
+        /// 解题过程中产生的冲突位置
         /// </summary>
-        public bool IsCreated => _created;
+        private List<int> conflictIndexes = new List<int>();
+
+        private int puzzleCount;
+
+        private bool _finished;
 
         /// <summary>
         /// 是否已经解决创建好的谜题
         /// </summary>
-        public bool Finished => _created && _finished;
+        public bool Finished => puzzleCount <= 0 && conflictIndexes.Count <= 0;
 
         /// <summary>
         /// 获取答题过程中的数值
@@ -56,6 +57,67 @@ namespace Sudoku
             return gridNumber[row, column];
         }
 
+        /// <summary>
+        /// 清空以作答的内容
+        /// </summary>
+        public void ClearPuzzleAnswer()
+        {
+            puzzleCount = 0;
+            for (int i = 0; i < _length; ++i)
+            {
+                for (int j = 0; j < _length; ++j)
+                {
+                    int value = puzzleNumber[i, j];
+                    gridNumber[i, j] = value;
+                    if (value == 0)
+                    {
+                        ++puzzleCount;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 解答当前谜题
+        /// </summary>
+        /// <param name="row"></param>
+        /// <param name="column"></param>
+        /// <param name="value"></param>
+        public void AnswerPuzzle(int row, int column, int value)
+        {
+            if (puzzleNumber[row, column] != 0)
+            {
+                // 输入位置是题面值，不能修改，题面值永远是合法值
+                return;
+            }
+
+            int originValue = gridNumber[row, column];
+            gridNumber[row, column] = value;
+            if (originValue == 0 && value != 0)
+            {
+                --puzzleCount;
+            }
+            else if (originValue != 0 && value == 0)
+            {
+                ++puzzleCount;
+            }
+            
+            // 刷新当前冲突情况
+            RefreshConflictInfo(row, column);
+        }
+
+        public void AnswerPuzzle(int index, int value)
+        {
+            int row = index / _length;
+            int column = index % _length;
+            AnswerPuzzle(row, column, value);
+        }
+
+        public bool IsConflictAt(int index)
+        {
+            return conflictIndexes.Contains(index);
+        }
+        
         /// <summary>
         /// 获取参考答案
         /// </summary>
@@ -79,6 +141,11 @@ namespace Sudoku
             _length = level * level;
             _difficulty = Mathf.Clamp01(hard);
             CreatePuzzleInternal();
+        }
+
+        public int PositionConvertToIndex(int row, int column)
+        {
+            return row * _length + column;
         }
 
         private void CreatePuzzleInternal()
@@ -202,6 +269,7 @@ namespace Sudoku
             int maxEmptyNum = (Length - 1) * (Length - 1);
             int emptyNum = (int)(minEmptyNum * (1 - difficulty) + maxEmptyNum * difficulty);
             int totalNum = Length * Length;
+            puzzleCount = 0;
             for (int i = 0; i < Length && emptyNum > 0; ++i)
             {
                 for (int j = 0; j < Length && emptyNum > 0; ++j)
@@ -210,18 +278,14 @@ namespace Sudoku
                     if (randomValue < emptyNum)
                     {
                         puzzleNumber[i, j] = 0;
+                        ++puzzleCount;
                         --emptyNum;
                     }
                     --totalNum;
                 }
             }
 
-            // 检查并确保所有不同的数字都出现过
-            
-              
-
-            // 将谜题备份用于重开本局游戏
-            System.Array.Copy(puzzleNumber, gridNumber, gridNumber.Length);
+            ClearPuzzleAnswer();
         }
 
         private bool SolveSudoku(int[,] puzzle, int startIndex)
@@ -271,67 +335,51 @@ namespace Sudoku
 
         private bool IsValidNumberInSudoku(int[,] puzzle, int row, int column, int value)
         {
-            if (IsContainInRow(puzzle, row, value))
+            if (value == 0)
             {
-                return false;
+                return true;
             }
-
-            if (IsContainInColumn(puzzle, column, value))
-            {
-                return false;
-            }
-
-            if (IsContainInSubgrid(puzzle, row, column, value))
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        private bool IsContainInRow(int[,] puzzle, int row, int value)
-        {
+            
             for (int i = 0; i < _length; ++i)
             {
-                if (puzzle[row, i] == value)
+                if (i != column && puzzle[row, i] == value)
                 {
-                    return true;
+                    return false;
                 }
             }
 
-            return false;
-        }
-        
-        private bool IsContainInColumn(int[,] puzzle, int column, int value)
-        {
             for (int i = 0; i < _length; ++i)
             {
-                if (puzzle[i, column] == value)
+                if (i != row && puzzle[i, column] == value)
                 {
-                    return true;
+                    return false;
                 }
             }
 
-            return false;
-        }
-        
-        private bool IsContainInSubgrid(int[,] puzzle, int row, int column, int value)
-        {
             int gridRow = row / _level;
             int gridColumn = column / _level;
-            
-            for (int i = 0; i < _level; ++i)
+            for (int i = gridRow * _level; i < gridRow * _level + _level; ++i)
             {
-                for(int j = 0;j<_level;++j)
+                if (i == row)
                 {
-                    if (puzzle[gridRow * _level + i, gridColumn * _level + j] == value)
+                    continue;
+                }
+
+                for (int j = gridColumn * _level; j < gridColumn * _level + _level; ++j)
+                {
+                    if (j == column)
                     {
-                        return true;
+                        continue;
+                    }
+
+                    if (puzzle[i, j] == value)
+                    {
+                        return false;
                     }
                 }
             }
 
-            return false;
+            return true;
         }
 
         private void ClearPuzzle(int[,] array, int length)
@@ -342,6 +390,78 @@ namespace Sudoku
                 {
                     array[i, j] = 0;
                 }
+            }
+        }
+
+        private void RefreshConflictInfo(int row, int column)
+        {
+            RefreshSingleConflictInfo(row, column);
+            
+            // 更新所有与其有关的row, column, grid的冲突情况
+            for (int i = 0; i < _length; ++i)
+            {
+                if (i == column)
+                {
+                    continue;
+                }
+                RefreshSingleConflictInfo(row, i);
+            }
+
+            for (int i = 0; i < _length; ++i)
+            {
+                if (i == row)
+                {
+                    continue;
+                }
+                RefreshSingleConflictInfo(i, column);
+            }
+
+            int gridRow = row / _level;
+            int gridColumn = column / _level;
+            for (int i = gridRow * _level; i < gridRow * _level + _level; ++i)
+            {
+                if (i == row)
+                {
+                    continue;
+                }
+
+                for (int j = gridColumn * _level; j < gridColumn * _level + _level; ++j)
+                {
+                    if (j == column)
+                    {
+                        continue;
+                    }
+
+                    RefreshSingleConflictInfo(i, j);
+                }
+            }
+        }
+
+        private void RefreshSingleConflictInfo(int row, int column)
+        {
+            if (puzzleNumber[row, column] != 0)
+            {
+                // 属于谜面，无需判断
+                return;
+            }
+            
+            int targetIndex = PositionConvertToIndex(row, column);
+
+            bool isValid = IsValidNumberInSudoku(gridNumber, row, column, gridNumber[row, column]);
+            bool isConflict = conflictIndexes.Contains(targetIndex);
+            if (!isConflict && isValid)
+            {
+                return;
+            }
+            
+            // 更新所有相关的冲突情况
+            if (!isConflict)
+            {
+                conflictIndexes.Add(targetIndex);
+            }
+            else if (isValid)
+            {
+                conflictIndexes.Remove(targetIndex);
             }
         }
     }

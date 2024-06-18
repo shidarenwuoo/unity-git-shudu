@@ -25,18 +25,15 @@ public class UILevelSelection : UIPanel
         int unlockLevel = GameData.GetUnlockLevel();
         for (int i = 0; i < levels.Count; ++i)
         {
-            levels[i].gameObject.SetActive(i < unlockLevel);
+            levels[i].gameObject.SetActive(i <= unlockLevel);
         }
     }
 
     private void SelectLevel(int level)
     {
-        // 获得关卡配置参数
-        var levelInfo = SudokuConfig.Instance.GetLevelPuzzle(level);
-        
         // 进入游玩界面
         var playPanel = UIManager.Instance.OpenUI(UINames.UISudokuPanel) as UISudokuPanel;
-        playPanel.CreateSudoku(levelInfo.level, levelInfo.difficult);
+        playPanel.CreateSudoku(level);
 
         Close();
     }
